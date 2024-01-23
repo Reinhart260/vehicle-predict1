@@ -1,17 +1,12 @@
 import os
-
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-
-import keras
-import io
-from numpy import argmax, expand_dims, float32
-import keras.utils as image
+from flask import Flask, request, jsonify, render_template
+from flask_cors import CORS
 from keras.models import load_model
 from keras.applications.vgg16 import VGG16
 from keras.layers import Dropout
-
-from flask import Flask, request, jsonify
-from flask_cors import CORS
+import keras.utils as image
+from numpy import argmax, expand_dims, float32
+import io
 
 # Import model
 model = load_model("model_fc.h5")
@@ -19,7 +14,6 @@ pre_model = VGG16(include_top=False, weights='imagenet')
 
 # Add Dropout to the fully connected layers of your model with a unique name
 model.add(Dropout(0.5, name="custom_dropout"))  # You can adjust the dropout rate as needed
-
 
 # Prediction function
 def predict(x):
@@ -31,11 +25,9 @@ def predict(x):
     pred = model.predict(bt_prediction)
     return pred
 
-
 # Initialize Flask server with error handling
 app = Flask(__name__)
 CORS(app)
-
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -53,8 +45,6 @@ def index():
             confidence_percentage = 0.62
             max_confidence = max(prediction[0])
 
-
-
             if max_confidence < confidence_percentage:
                 warning_message = f"Warning: High confidence ({max_confidence:.2f}) in the prediction. May indicate overfitting."
                 return jsonify({"prediction": "Unknown", "warning": warning_message})
@@ -67,8 +57,7 @@ def index():
         except Exception as e:
             return jsonify({"error": str(e)})
 
-    return "OK"
-
+    return render_template('frontend.html')
 
 if __name__ == "__main__":
     # app.run(debug=True)
